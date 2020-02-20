@@ -1,19 +1,23 @@
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
 import org.junit.Before;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
-
-
-class SensorSuiteSimulatorTest {
+/**
+ * Tests relied on the constructor's author being sane- 
+ * first two ints are low - high, last two are high - low bounds. 
+ * Fixed.
+ * @author Geoff
+ *
+ */
+public class SensorSuiteSimulatorTest {
 	
 	private SensorSuiteSimulator test;
     /**
      * @throws java.lang.Exception
      */
     @Before
-    void setUp() throws Exception {
+    public void setUp() throws Exception {
         test = new SensorSuiteSimulator(68, 71, 47, 57, 10, 90, 70, 50, 40);
     }
 
@@ -22,7 +26,7 @@ class SensorSuiteSimulatorTest {
      */
     @Test
     public void testSimulatorConstructor() {
-        SensorSuiteSimulator s = new SensorSuiteSimulator(1,1,1,1,1,1,1,1,1);
+        SensorSuiteSimulator s = new SensorSuiteSimulator(1,2,1,2,1,2,1,2,1);
         assertEquals("Constructor test failed", 1, s.getCurrentInsideHum());
 
     }
@@ -32,25 +36,43 @@ class SensorSuiteSimulatorTest {
      */
     @Test
 	public void testGetters() {
-        SensorSuiteSimulator s = new SensorSuiteSimulator(1,1,1,1,1,1,1,1,1);
-        assertEquals("Current inside hum test failed", 1, s.getCurrentInsideHum());
-        assertEquals("Current outside hum test failed", 1, s.getCurrentOutsideHum());
+        SensorSuiteSimulator s = new SensorSuiteSimulator(1,3,1,3,1,3,1,3,1);
         
-        assertEquals("Current inside temp test failed", 1, s.getCurrentInsideTemp());
-        assertEquals("Current outside temp test failed", 1, s.getCurrentOutsideTemp());
+        int temp = s.getCurrentInsideHum();
         
-        assertEquals("Inside low temp test failed", 1, s.getInsideLow());
-        assertEquals("Inside high temp test failed", 1, s.getInsideHigh());
+        assertTrue(temp >= 1 && temp <= 3);
         
-        assertEquals("Current wind speed test failed", 1, s.getCurrentWindSpeed());
+        temp = s.getCurrentOutsideHum();
         
+        assertTrue(temp >= 1 && temp <= 3);
+       
+        temp = s.getCurrentInsideTemp();
+        
+        assertTrue(temp >= 1 && temp <= 3);
+        
+        temp = s.getCurrentOutsideTemp();
+        
+        assertTrue(temp >= 1 && temp <= 3);
+                
+        temp = s.getInsideLow();
+        
+        assertTrue(temp >= 1 && temp <= 3);
+        
+        temp = s.getInsideHigh();
+        
+        assertTrue(temp >= 1 && temp <= 3);
+        
+        temp = s.getCurrentWindSpeed();
+        
+        assertTrue(temp >= 0);
+              
 
     }
     /**
      * Test method for current pressure
      */
     @Test
-    void testCurrentPressure() {
+    public void testCurrentPressure() {
         double temp = test.getCurrentPressure();
         assertTrue(temp <= 31 && temp >= 26);
     }
@@ -60,7 +82,7 @@ class SensorSuiteSimulatorTest {
      * Test method for rain total
      */
     @Test
-    void testCurrentRainTotal() {
+    public void testCurrentRainTotal() {
         double temp = test.getCurrentRainTotal();
         assertTrue(temp >= 0);
     }
