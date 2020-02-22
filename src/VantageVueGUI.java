@@ -77,6 +77,7 @@ public class VantageVueGUI extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -317,7 +318,7 @@ public class VantageVueGUI extends JFrame {
 	 * Helper method that creates all of the static, cosmetic labels.
 	 */
 	private void createStaticLabels(){
-		JLabel lblSunriseTime = new JLabel((int)Math.floor(sunrise) + ":" + (int)Math.ceil(sunriseMinutes * 60) + " AM");
+		JLabel lblSunriseTime = new JLabel((int)Math.floor(sunrise) + ":" + (sunriseMinutes * 60 < 10 ? "0" : "") + (int)Math.ceil(sunriseMinutes * 60) + " AM");
 		lblSunriseTime.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		lblSunriseTime.setBounds(240, 110, 200, 20);
 		pnlMain.add(lblSunriseTime);
@@ -327,7 +328,7 @@ public class VantageVueGUI extends JFrame {
 		lblSunrise.setBounds(256, 135, 46, 14);
 		pnlMain.add(lblSunrise);
 		
-		JLabel lblSunsetTime = new JLabel((int)Math.floor(sunset)-12 + ":" + (int)Math.ceil(sunsetMinutes * 60) + " PM");
+		JLabel lblSunsetTime = new JLabel((int)Math.floor(sunset)-12 + ":" + (sunsetMinutes * 60 < 10? "0" : "") +(int)Math.ceil(sunsetMinutes * 60) + " PM");
 		lblSunsetTime.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		lblSunsetTime.setBounds(240, 160, 200, 20);
 		pnlMain.add(lblSunsetTime);
