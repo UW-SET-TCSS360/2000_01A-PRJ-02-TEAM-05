@@ -384,4 +384,18 @@ public class SensorSuiteSimulator {
 		return temp;
 	}
 	
+	/**
+	 * Returns the current wind chill according to the formula at
+	 * https://www.mentalfloss.com/article/26730/how-wind-chill-calculated
+	 * 
+	 */
+	public int getWindChill() {
+		
+		int temp = getCurrentOutsideTemp();
+		int wind = getCurrentWindSpeed();
+		
+		return (int) (35.74 + 0.6215*temp
+					- 35.75*(Math.pow(wind, 0.16)) +
+					0.4275*temp*(Math.pow(wind, 0.16)));
+	}
 }
