@@ -86,5 +86,18 @@ public class SensorSuiteSimulatorTest {
         double temp = test.getCurrentRainTotal();
         assertTrue(temp >= 0);
     }
-
+    
+    /**
+     * Windchill test.
+     */
+    @Test
+    public void testWindChill() {
+    	
+    	int windchill = test.getWindChill();
+    	
+    	// Based on the formula and the test obj params the 
+    	// windchill should always be in this range.
+    	assert(windchill >= 42 && windchill <= 72);
+    	
+    }
 }
