@@ -1,1 +1,1 @@
-WeatherStation.java is a simulation of the Davis Instruments Weather Station. It does nothing more than generate "random" information. 
+WeatherStation.java is a simulation of the Davis Instruments Weather Station. Pulls data from openweathermap.org.
