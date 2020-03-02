@@ -1,8 +1,6 @@
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /** 
@@ -14,26 +12,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class SensorSuiteSimulator {
 	
 	/**
-	 * This holds the month temperature highs for creating 25 months of data.
-	 */
-	private static final int[] MONTH_HIGHS = {40, 50, 56, 67, 75, 86,
-											  95, 95, 79, 65, 53, 40};
-	
-	/**
 	 * Holds the cardinal directions for generating a wind direction.
 	 */
 	private static final String[] WIND_DIRECTIONS = {"N", "NE", "E", "SE",
 													 "S", "SW", "W", "NW"};
 	
-	/**
-	 * Holds the temperature data for the last 25 days.
-	 */
-	private final List<Integer> last25Days;
-	
-	/**
-	 * Holds the temperature data for the last 25 months.
-	 */
-	private final List<Integer> last25Months;
 	
 	/**
 	 * Holds the days high outside temperature.
@@ -147,36 +130,8 @@ public class SensorSuiteSimulator {
 		lowInsideHumidity = lowInsideHum;
 		outsideHumidity = ThreadLocalRandom.current().nextInt(lowOutsideHumidity, highOutsideHumidity);
 		insideHumidity = ThreadLocalRandom.current().nextInt(lowInsideHumidity, highInsideHumidity);
-		last25Months = setLast25Months();
-		last25Days = setLast25Days();
 	}
 	
-	/**
-	 * Helper methods to set the weather temps for the last 25 months.
-	 * 
-	 * @return the list holding the weather data for the last 25 months.
-	 */
-	private List<Integer> setLast25Months() {
-		List<Integer> temp = new ArrayList<>();
-		for (int i = 0; i < 25; i++) {
-			int theTemp = MONTH_HIGHS[i % 12];
-			temp.add(ThreadLocalRandom.current().nextInt(theTemp - 30, theTemp));
-		}
-		return temp;
-	}
-
-	/**
-	 * Helper methods to set the weather temps for the last 25 days.
-	 * 
-	 * @return the list holding the weather data for the last 25 days.
-	 */
-	private List<Integer> setLast25Days() {
-		List<Integer> temp = new ArrayList<>();
-		for (int i = 0; i < 25; i++) {
-			temp.add(ThreadLocalRandom.current().nextInt(todaysOutsideLowTemp, todaysOutsideHighTemp));
-		}
-		return temp;
-	}
 	
 	/**
 	 * gets and returns the new outside temp.
@@ -283,23 +238,9 @@ public class SensorSuiteSimulator {
 		return WIND_DIRECTIONS[ThreadLocalRandom.current().nextInt(0, 8)];
 	}
 	
-	/** 
-	 * Returns the list containing weather data for the last 25 days.
-	 * 
-	 * @return the list containing weather data for the last 25 days.
-	 */
-	public List<Integer> getLast25Days(){	
-		return last25Days;
-	}
+
 	
-	/** 
-	 * Returns the list containing weather data for the last 25 months.
-	 * 
-	 * @return the list containing weather data for the last 25 months.
-	 */
-	public List<Integer> getLast25Months(){		
-		return last25Months;
-	}
+
 	
 	/**
 	 * Calls a method and randomly updates the rainfall by a small increment.

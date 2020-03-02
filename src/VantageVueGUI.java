@@ -1,3 +1,7 @@
+
+
+import org.json.JSONException;
+
 import java.awt.EventQueue;
 
 import javax.swing.border.EmptyBorder;
@@ -5,13 +9,13 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -23,6 +27,7 @@ import javax.swing.border.LineBorder;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 /**
@@ -33,13 +38,10 @@ public class VantageVueGUI extends JFrame {
 	private static final long serialVersionUID = 3196082805354390538L;
 
 	private SensorSuiteSimulator sim;
+	private WeatherStation w;
 	private final ButtonGroup buttonGroup;
 	
 	
-	private Calendar calendar;
-	private int dayOfYear;
-	private Double sunrise;
-	private Double sunset;
 	double sunriseMinutes;
 	double sunsetMinutes;
 	
@@ -60,8 +62,14 @@ public class VantageVueGUI extends JFrame {
 	private JLabel lblTopMain;
 	private JLabel lblTime;
 	private JLabel lblClock;
-	
+	private JLabel lblSunriseTime;
+	private JLabel lblSunsetTime;
+
 	private JLabel lblWindSpeed;
+	
+	private JLabel lblForecastMain;
+	private JLabel lblForecastDescrip;
+	private JLabel lblForecastIcon;
 	
 	private JLabel N;
 	private JLabel S;
@@ -94,27 +102,24 @@ public class VantageVueGUI extends JFrame {
 	 * Create the frame.
 	 */
 	
-	public VantageVueGUI() {
+	public VantageVueGUI() throws JSONException {
 		setResizable(false);
-		
+		w = new WeatherStation(30);
 		sim = new SensorSuiteSimulator(68, 71, 47, 57, 10, 90, 70, 50, 40);
-		
-		calendar = Calendar.getInstance();
-		dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-		
-		sunset = SunRiseSetAlgo.calcSunset(dayOfYear, -8.0, 47.258728 , -122.465973);
-		sunrise = SunRiseSetAlgo.calcSunrise(dayOfYear, -8.0, 47.258728 , -122.465973);
-		sunriseMinutes = sunrise - Math.floor(sunrise);
-		sunsetMinutes = sunset - Math.floor(sunset);
-		
+
 	
-		final URL url = VantageVueGUI.class.getResource("/radar.png");
-        final ImageIcon icon = new ImageIcon(url);
-		setIconImage(icon.getImage());
+		try {
+			final URL url = VantageVueGUI.class.getResource("radar.png");
+	        final ImageIcon icon = new ImageIcon(url);
+			setIconImage(icon.getImage());
+		} catch(Exception e) {
+			System.out.println("IDE not configured for resources folder");
+		}
+
 		
 		setTitle("Weather Center");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 600, 270);
+		setBounds(100, 100, 601, 366);
 		pnlContentPane = new JPanel();
 		pnlContentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(pnlContentPane);
@@ -134,7 +139,7 @@ public class VantageVueGUI extends JFrame {
 		pnlMain.setFont(new Font("Tahoma", Font.PLAIN, 9));
 		pnlMain.setBorder(null);
 		pnlMain.setBackground(Color.WHITE);
-		pnlMain.setBounds(10, 11, 405, 213);
+		pnlMain.setBounds(10, 11, 405, 316);
 		pnlContentPane.add(pnlMain);
 		pnlMain.setLayout(null);
 		
@@ -154,18 +159,22 @@ public class VantageVueGUI extends JFrame {
 	/*
 	 * This is a helper method that creates all of the buttons.
 	 */
-	private void createButtons() {
+	private void createButtons()  {
 		btnTemperature = new JToggleButton("TEMPERATURE");
 		btnTemperature.setName("temperature");
 		buttonGroup.add(btnTemperature);
 		btnTemperature.setSelected(true);
 		btnTemperature.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)  {
 
 				lblInside.setVisible(true);
 				lblOutside.setVisible(true);
 				lblLeftMain.setText(Integer.toString(sim.getCurrentInsideTemp()) + " F");
-				lblRightMain.setText(Integer.toString(sim.getCurrentOutsideTemp()) + " F");
+				try {
+					lblRightMain.setText(w.getCurrentTemp());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
 				lblTopMain.setText("Temperature");
 				repaint();
 			}
@@ -181,7 +190,11 @@ public class VantageVueGUI extends JFrame {
 		btnHumidity.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				lblLeftMain.setText(Integer.toString(sim.getCurrentInsideHum()) + " %");
-				lblRightMain.setText(Integer.toString(sim.getCurrentOutsideHum()) + " %");
+				try {
+					lblRightMain.setText(w.getCurrentHumid());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
 				lblInside.setVisible(true);
 				lblOutside.setVisible(true);
 				lblTopMain.setText("Humidity");
@@ -198,8 +211,12 @@ public class VantageVueGUI extends JFrame {
 		buttonGroup.add(btnBarometricPressure);
 		btnBarometricPressure.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				lblLeftMain.setText(Double.toString(sim.getCurrentPressure()));
-				lblRightMain.setText("PSI");
+				try {
+					lblLeftMain.setText(w.getCurrentPressure());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+				lblRightMain.setText("hPa");
 				lblInside.setVisible(false);
 				lblOutside.setVisible(false);
 				lblTopMain.setText("Barometric Pressure");
@@ -234,14 +251,25 @@ public class VantageVueGUI extends JFrame {
 	/*
 	 * Helper method that creates all of the dynamic labels, ie main left/right/top
 	 */
-	private void createDynamicLabels() {
+	private void createDynamicLabels() throws JSONException {
 
-		lblLeftMain = new JLabel(Integer.toString(sim.getCurrentInsideTemp()) + " F");
+		lblSunriseTime = new JLabel(w.getSunrise());
+		System.out.println(w.getSunrise());
+		lblSunriseTime.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblSunriseTime.setBounds(240, 110, 200, 20);
+		pnlMain.add(lblSunriseTime);
+
+		lblSunsetTime = new JLabel(w.getSunset());
+		lblSunsetTime.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblSunsetTime.setBounds(240, 160, 200, 20);
+		pnlMain.add(lblSunsetTime);
+
+		lblLeftMain = new JLabel(sim.getCurrentInsideTemp() + " F");
 		lblLeftMain.setFont(new Font("Tahoma", Font.PLAIN, 31));
 		lblLeftMain.setBounds(200, 35, 99, 53);
 		pnlMain.add(lblLeftMain);
 		
-		lblRightMain = new JLabel(Integer.toString(sim.getCurrentOutsideTemp()) + " F");
+		lblRightMain = new JLabel(w.getCurrentTemp());
 		lblRightMain.setFont(new Font("Tahoma", Font.PLAIN, 30));
 		lblRightMain.setBounds(300, 30, 99, 58);
 		pnlMain.add(lblRightMain);
@@ -313,25 +341,41 @@ public class VantageVueGUI extends JFrame {
 		lblWindSpeed.setFont(new Font("Tahoma", Font.BOLD, 12));
 		lblWindSpeed.setBounds(10, 10, 200, 20);
 		pnlMain.add(lblWindSpeed);
+		
+		JLabel lblNewLabel = new JLabel("Today's Forecast");
+		lblNewLabel.setBounds(25, 231, 145, 14);
+		pnlMain.add(lblNewLabel);
+		
+		lblForecastMain = new JLabel("");
+		lblForecastMain.setBounds(33, 256, 71, 14);
+		pnlMain.add(lblForecastMain);
+		
+		lblForecastDescrip = new JLabel("");
+		lblForecastDescrip.setBounds(33, 281, 137, 14);
+		pnlMain.add(lblForecastDescrip);
+		
+		JPanel panel = new JPanel();
+		panel.setBackground(Color.LIGHT_GRAY);
+		panel.setBounds(229, 210, 114, 85);
+		pnlMain.add(panel);
+		
+		lblForecastIcon = new JLabel("");
+		lblForecastIcon.setHorizontalAlignment(SwingConstants.CENTER);
+		panel.add(lblForecastIcon);
+		lblForecastIcon.setBackground(Color.DARK_GRAY);
 	}
 	/*
 	 * Helper method that creates all of the static, cosmetic labels.
 	 */
-	private void createStaticLabels(){
-		JLabel lblSunriseTime = new JLabel((int)Math.floor(sunrise) + ":" + (sunriseMinutes * 60 < 10 ? "0" : "") + (int)Math.ceil(sunriseMinutes * 60) + " AM");
-		lblSunriseTime.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblSunriseTime.setBounds(240, 110, 200, 20);
-		pnlMain.add(lblSunriseTime);
+	private void createStaticLabels()  {
+
 		
 		JLabel lblSunrise = new JLabel("Sunrise");
 		lblSunrise.setFont(new Font("Tahoma", Font.PLAIN, 12));
 		lblSunrise.setBounds(256, 135, 46, 14);
 		pnlMain.add(lblSunrise);
 		
-		JLabel lblSunsetTime = new JLabel((int)Math.floor(sunset)-12 + ":" + (sunsetMinutes * 60 < 10? "0" : "") +(int)Math.ceil(sunsetMinutes * 60) + " PM");
-		lblSunsetTime.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblSunsetTime.setBounds(240, 160, 200, 20);
-		pnlMain.add(lblSunsetTime);
+
 		
 		JLabel lblSunset = new JLabel("Sunset");
 		lblSunset.setFont(new Font("Tahoma", Font.PLAIN, 12));
@@ -385,17 +429,29 @@ public class VantageVueGUI extends JFrame {
 		compassTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-            	JLabel[] arrayOfLables = {N,NW,NE,SW,SE,W,E};
-            	List<JLabel> labels = new ArrayList<>(Arrays.asList(arrayOfLables));
-            	String s = sim.getCurrentWindDirection();
-            	for (JLabel label : labels) {
-            	    label.setVisible(false);
-            	    if(label.getName() == s) {
-            	    	label.setVisible(true);
-            	    	label.setText(Integer.toString(sim.getCurrentWindSpeed()));
-            	    
-            	    }
-            	}
+				try {
+					Double windDir = w.getWindDir();
+					JLabel[] arrayOfLables = {N,NW,NE,SW,SE,W,E};
+					String directions[] = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+					List<JLabel> labels = new ArrayList<>(Arrays.asList(arrayOfLables));
+					String s = directions[((int) Math.round((( windDir % 360) / 45)) % 8)];
+					//String s = sim.getCurrentWindDirection();
+					for (JLabel label : labels) {
+						label.setVisible(false);
+						if(label.getName() == s) {
+							label.setVisible(true);
+							try {
+								label.setText(w.getWindSpeed());
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+
+						}
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
             	
                 repaint();
             }
@@ -406,20 +462,58 @@ public class VantageVueGUI extends JFrame {
             @Override
             public void run() {
             	
-            	JToggleButton[] arrayOButtons = {btnTemperature, btnHumidity, btnBarometricPressure, btnRainfall};
+            	try {
+            		 lblForecastDescrip.setText(w.getWeatherDescrip());
+            		 lblForecastMain.setText(w.getWeatherMain());
+            	} catch (JSONException e) {
+            		e.printStackTrace();
+            	}
+
+            	try {
+               	 URL url = new URL(w.getWeatherIcon());
+               	 Image image = ImageIO.read(url);
+               	 lblForecastIcon.setIcon(new ImageIcon(image));
+            	} catch(Exception e) {
+            		e.printStackTrace();
+            	}
+
+				try {
+					lblSunriseTime.setText(w.getSunrise());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+				try {
+					lblSunsetTime.setText(w.getSunset());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
+				JToggleButton[] arrayOButtons = {btnTemperature, btnHumidity, btnBarometricPressure, btnRainfall};
             	List<JToggleButton> buttons = new ArrayList<>(Arrays.asList(arrayOButtons));
 
             	for (JToggleButton button : buttons) {
             	    if(button.isSelected()) {
             	    	if(button.getName() == "temperature") {
-            				lblLeftMain.setText(Integer.toString(sim.getCurrentInsideTemp()) + " F");
-            				lblRightMain.setText(Integer.toString(sim.getCurrentOutsideTemp()) + " F");
-            	    	} else if(button.getName() == "humidity") {
-            				lblLeftMain.setText(Integer.toString(sim.getCurrentInsideHum()) + " %");
-            				lblRightMain.setText(Integer.toString(sim.getCurrentOutsideHum()) + " %");
-            	    	} else if(button.getName() == "pressure") {
-            				lblLeftMain.setText(Double.toString(sim.getCurrentPressure()));
-            	    	} else if(button.getName() == "rainfall") {
+            				lblLeftMain.setText(sim.getCurrentInsideTemp() + " F");
+							try {
+								lblRightMain.setText(w.getCurrentTemp());
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						} else if(button.getName() == "humidity") {
+            				lblLeftMain.setText(sim.getCurrentInsideHum() + " %");
+							try {
+								lblRightMain.setText(w.getCurrentHumid());
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						} else if(button.getName() == "pressure") {
+							try {
+								lblLeftMain.setText(w.getCurrentPressure());
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						} else if(button.getName() == "rainfall") {
             				lblLeftMain.setText(Double.toString(sim.getCurrentRainTotal()));
             	    	}
             	    }
